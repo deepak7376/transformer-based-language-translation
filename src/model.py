@@ -6,18 +6,10 @@ class TransformerModel(nn.Module):
         super(TransformerModel, self).__init__()
 
         # Define your Transformer encoder
-        self.encoder = nn.Transformer(
+        self.transformer_model = nn.Transformer(
             d_model=d_model,
             nhead=nhead,
             num_encoder_layers=num_encoder_layers,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout
-        )
-
-        # Define your Transformer decoder
-        self.decoder = nn.Transformer(
-            d_model=d_model,
-            nhead=nhead,
             num_decoder_layers=num_decoder_layers,
             dim_feedforward=dim_feedforward,
             dropout=dropout
@@ -32,10 +24,32 @@ class TransformerModel(nn.Module):
         tgt_embedded = self.target_embedding(tgt)
 
         # Pass the source and target sequences through the encoder and decoder
-        encoder_output = self.encoder(src_embedded)
-        decoder_output = self.decoder(tgt_embedded, encoder_output)
+        output = self.transformer_model(src_embedded, tgt_embedded)
+        return self.fc(output)
 
-        return self.fc(decoder_output)
+if __name__ == "__main__":
 
-# Example of model initialization:
-# model = TransformerModel(input_vocab_size, target_vocab_size, d_model, nhead, num_encoder_layers, num_decoder_layers, dim_feedforward, dropout)
+  # Define the model parameters
+  num_encoder_layers = 2
+  num_decoder_layers = 2
+  d_model = 512
+  num_heads = 8
+  d_ff = 2048
+  src_vocab_size = 10000  # Example source vocabulary size
+  tgt_vocab_size = 50000  # Example target vocabulary size
+  dropout = 0.1
+  seq_len = 100
+
+  # Set the parameters
+  batch_size = 32
+
+  # Example of model initialization:
+  model = TransformerModel(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_encoder_layers, num_decoder_layers, d_ff, dropout)
+
+  # Create random dummy input data within the vocab_size range
+  src_input = torch.randint(0, src_vocab_size, (batch_size, seq_len))
+  tgt_input = torch.randint(0, tgt_vocab_size, (batch_size, seq_len))
+
+  # Forward pass through the Transformer
+  output_logits = model(src_input, tgt_input)
+  print("Transformer Output", output_logits.shape)
