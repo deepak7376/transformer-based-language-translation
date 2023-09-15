@@ -7,11 +7,24 @@ from dataset import TranslationDataset  # You'll need to create a dataset module
 from model import TransformerModel  # Your Transformer model implementation
 from utils import save_checkpoint
 
+# Define the model parameters
+num_encoder_layers = 2
+num_decoder_layers = 2
+d_model = 512
+num_heads = 8
+d_ff = 2048
+src_vocab_size = 1000  # Example source vocabulary size
+tgt_vocab_size = 5000  # Example target vocabulary size
+dropout = 0.1
+seq_len = 12
+
 def train(model, train_loader, criterion, optimizer, device):
     model.train()
     total_loss = 0
 
-    for src, tgt in train_loader:
+    for batch in train_loader:
+        src = batch['input_ids']
+        tgt = batch['target_ids']
         src, tgt = src.to(device), tgt.to(device)
 
         optimizer.zero_grad()
@@ -36,11 +49,11 @@ def main():
     args = parser.parse_args()
 
     # Create a DataLoader for your dataset
-    train_dataset = TranslationDataset(args.data_path)
+    train_dataset = TranslationDataset(args.data_path, max_length=seq_len)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
 
-    # Initialize the model, optimizer, and loss function
-    model = TransformerModel(...)  # Initialize your Transformer model with appropriate hyperparameters
+    # Example of model initialization:
+    model = TransformerModel(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_encoder_layers, num_decoder_layers, d_ff, dropout)  # Initialize your Transformer model with appropriate hyperparameters
     model.to(args.device)
 
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)

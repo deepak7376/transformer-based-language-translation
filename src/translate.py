@@ -1,7 +1,19 @@
 import argparse
 import torch
+from utils import load_checkpoint
 from model import TransformerModel  # Import your Transformer model implementation
 from dataset import TranslationDataset  # Import your TranslationDataset class
+
+# Define the model parameters
+num_encoder_layers = 2
+num_decoder_layers = 2
+d_model = 512
+num_heads = 8
+d_ff = 2048
+src_vocab_size = 1000  # Example source vocabulary size
+tgt_vocab_size = 5000  # Example target vocabulary size
+dropout = 0.1
+seq_len = 12
 
 def translate_sentence(model, sentence, max_length, device):
     # Tokenize the input sentence
@@ -47,10 +59,11 @@ def main():
     parser.add_argument('--max_length', type=int, default=50, help='Maximum length of the generated translation')
     args = parser.parse_args()
 
-    # Load the trained model
-    model = TransformerModel(...)  # Initialize your Transformer model with the same hyperparameters as used during training
-    model.load_state_dict(torch.load(args.checkpoint_path))
-    model.to(device)
+    # Example of model initialization:
+    model = TransformerModel(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_encoder_layers, num_decoder_layers, d_ff, dropout)  # Initialize your Transformer model with appropriate hyperparameters
+    model.to(args.device)
+    load_checkpoint(model, args.checkpoint_path)
+    model.eval()
 
     # Translate the input sentence
     translation = translate_sentence(model, args.input, args.max_length, device)

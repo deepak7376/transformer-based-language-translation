@@ -9,7 +9,7 @@ from tokenizers.models import BPE
 from tokenizers.processors import TemplateProcessing
 
 class TranslationDataset(Dataset):
-    def __init__(self, data_path, max_length):
+    def __init__(self, data_path, max_length=20, mode="train"):
         """
         Args:
             data_path (str): Path to the data directory containing train.en.txt and train.hi.txt.
@@ -19,8 +19,12 @@ class TranslationDataset(Dataset):
         self.max_length = max_length
 
         # Load English and Hindi sentences
-        self.english_sentences = self.load_sentences(data_path + 'train.en.txt')
-        self.hindi_sentences = self.load_sentences(data_path + 'train.hi.txt')
+        if mode=="train":
+            self.english_sentences = self.load_sentences(data_path + 'train.en.txt')
+            self.hindi_sentences = self.load_sentences(data_path + 'train.hi.txt')
+        if mode=="eval":
+            self.english_sentences = self.load_sentences(data_path + 'val.en.txt')
+            self.hindi_sentences = self.load_sentences(data_path + 'val.hi.txt')
 
         # Tokenize the sentences
         self.english_sentences, self.hindi_sentences = self.tokenize_sentences(self.english_sentences, self.hindi_sentences)
@@ -48,21 +52,21 @@ class TranslationDataset(Dataset):
         # Initialize spaCy tokenizers for English and Hindi
         en_tokenizer = Tokenizer.from_file("tokenizer-en.json")
         hi_tokenizer = Tokenizer.from_file("tokenizer-hi.json")  # Replace with an appropriate Hindi language model if available
-        en_tokenizer.post_processor = TemplateProcessing(
-            single="[SOS] $A [EOS]",
-            special_tokens=[
-                ("[SOS]", tokenizer.token_to_id("[SOS]")),
-                ("[EOS]", tokenizer.token_to_id("[EOS]")),
-            ],
-        )
+        # en_tokenizer.post_processor = TemplateProcessing(
+        #     single="[SOS] $A [EOS]",
+        #     special_tokens=[
+        #         ("[SOS]", en_tokenizer.token_to_id("[SOS]")),
+        #         ("[EOS]", en_tokenizer.token_to_id("[EOS]")),
+        #     ],
+        # )
 
-        hi_tokenizer.post_processor = TemplateProcessing(
-            single="[SOS] $A [EOS]",
-            special_tokens=[
-                ("[SOS]", tokenizer.token_to_id("[SOS]")),
-                ("[EOS]", tokenizer.token_to_id("[EOS]")),
-            ],
-        )
+        # hi_tokenizer.post_processor = TemplateProcessing(
+        #     single="[SOS] $A [EOS]",
+        #     special_tokens=[
+        #         ("[SOS]", hi_tokenizer.token_to_id("[SOS]")),
+        #         ("[EOS]", hi_tokenizer.token_to_id("[EOS]")),
+        #     ],
+        # )
 
         # Tokenize English sentences
         english_tokens = [en_tokenizer.encode(sentence) for sentence in english_sentences]
@@ -73,10 +77,14 @@ class TranslationDataset(Dataset):
         # Extract token texts and handle padding/truncation based on self.max_length
         # Function to pad or truncate sequences to a fixed length
         def pad_or_truncate(sequence, max_length):
+            
             if len(sequence) < max_length:
                 sequence.extend([en_tokenizer.token_to_id("[PAD]")] * (max_length - len(sequence)))
             elif len(sequence) > max_length:
                 sequence = sequence[:max_length]
+            
+            # Add [SOS] (start of sequence) and [EOS] (end of sequence) tokens
+            sequence = [en_tokenizer.token_to_id("[SOS]")] + sequence + [en_tokenizer.token_to_id("[EOS]")]
             return sequence
 
         english_token_ids = [pad_or_truncate(token.ids, self.max_length) for token in english_tokens]
@@ -85,9 +93,9 @@ class TranslationDataset(Dataset):
     
         return english_token_ids, hindi_token_ids
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     # Create an instance of your TranslationDataset
-    data_path = "./"
+    data_path = "data/"
     max_length = 10  # Set your desired maximum sequence length
     dataset = TranslationDataset(data_path, max_length)
     
@@ -101,17 +109,17 @@ if __name__ = "__main__":
     print(f"Input IDs: {sample['input_ids']}")
     print(f"Target IDs: {sample['target_ids']}")
 
-    from torch.utils.data import DataLoader
-    # Define batch size
-    batch_size = 4  # Set your desired batch size
-    # Create a DataLoader with the custom collate function
-    dataloader = DataLoader(dataset, batch_size=batch_size)
+    # from torch.utils.data import DataLoader
+    # # Define batch size
+    # batch_size = 2  # Set your desired batch size
+    # # Create a DataLoader with the custom collate function
+    # dataloader = DataLoader(dataset, batch_size=batch_size)
     
-    # Iterate through the DataLoader
-    for batch in dataloader:
-        input_ids = batch['input_ids']
-        target_ids = batch['target_ids']
+    # # Iterate through the DataLoader
+    # for batch in dataloader:
+    #     input_ids = batch['input_ids']
+    #     target_ids = batch['target_ids']
     
-        # Print or process the batched data as needed
-        print(f"Batch Input IDs: {input_ids}")
-        print(f"Batch Target IDs: {target_ids}")
+    #     # Print or process the batched data as needed
+    #     print(f"Batch Input IDs: {input_ids}")
+    #     print(f"Batch Target IDs: {target_ids[:-1]}")

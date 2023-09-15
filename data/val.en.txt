@@ -1,1 +1,5 @@
-
+I am learning a new language.
+This is an example sentence.
+Translate this text to Hindi.
+The quick brown fox jumps over the lazy dog.
+Machine translation is a fascinating field.

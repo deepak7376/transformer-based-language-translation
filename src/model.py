@@ -35,13 +35,13 @@ if __name__ == "__main__":
   d_model = 512
   num_heads = 8
   d_ff = 2048
-  src_vocab_size = 10000  # Example source vocabulary size
-  tgt_vocab_size = 50000  # Example target vocabulary size
+  src_vocab_size = 1000  # Example source vocabulary size
+  tgt_vocab_size = 5000  # Example target vocabulary size
   dropout = 0.1
   seq_len = 100
 
   # Set the parameters
-  batch_size = 32
+  batch_size = 1
 
   # Example of model initialization:
   model = TransformerModel(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_encoder_layers, num_decoder_layers, d_ff, dropout)
@@ -51,5 +51,5 @@ if __name__ == "__main__":
   tgt_input = torch.randint(0, tgt_vocab_size, (batch_size, seq_len))
 
   # Forward pass through the Transformer
-  output_logits = model(src_input, tgt_input)
+  output_logits = model(src_input, tgt_input[:-1])
   print("Transformer Output", output_logits.shape)

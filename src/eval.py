@@ -1,16 +1,30 @@
 import argparse
 import torch
 import torch.nn as nn
+from utils import load_checkpoint
 from torch.utils.data import DataLoader
 from dataset import TranslationDataset  # You'll need to create a dataset module
 from model import TransformerModel  # Your Transformer model implementation
+
+# Define the model parameters
+num_encoder_layers = 2
+num_decoder_layers = 2
+d_model = 512
+num_heads = 8
+d_ff = 2048
+src_vocab_size = 1000  # Example source vocabulary size
+tgt_vocab_size = 5000  # Example target vocabulary size
+dropout = 0.1
+seq_len = 12
 
 def evaluate(model, eval_loader, criterion, device):
     model.eval()
     total_loss = 0
 
     with torch.no_grad():
-        for src, tgt in eval_loader:
+        for batch in eval_loader:
+            src = batch['input_ids']
+            tgt = batch['target_ids']
             src, tgt = src.to(device), tgt.to(device)
 
             output = model(src, tgt[:-1])  # Exclude the last token from target
@@ -29,14 +43,14 @@ def main():
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu', help='Device (cuda or cpu)')
     args = parser.parse_args()
 
-    # Create a DataLoader for your evaluation dataset
-    eval_dataset = TranslationDataset(args.data_path, mode='eval')
-    eval_loader = DataLoader(eval_dataset, batch_size=args.batch_size, shuffle=False)
+    # Create a DataLoader for your dataset
+    eval_dataset = TranslationDataset(args.data_path, max_length=seq_len, mode="eval")
+    eval_loader = DataLoader(eval_dataset, batch_size=args.batch_size, shuffle=True)
 
-    # Load the model and set it to evaluation mode
-    model = TransformerModel(...)  # Initialize your Transformer model with the same hyperparameters as used during training
+    # Example of model initialization:
+    model = TransformerModel(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_encoder_layers, num_decoder_layers, d_ff, dropout)  # Initialize your Transformer model with appropriate hyperparameters
     model.to(args.device)
-    model.load_state_dict(torch.load(args.checkpoint_path))
+    load_checkpoint(model, args.checkpoint_path)
     model.eval()
 
     criterion = nn.CrossEntropyLoss()
