@@ -1,4 +1,4 @@
-# English to Hindi Language Translation using Transformer
+# Language Translation using Transformer
 
 This project demonstrates a language translation system that translates English text to Hindi using a Transformer-based neural network. The Transformer architecture has proven to be highly effective for sequence-to-sequence tasks like machine translation, making it a powerful choice for this project.
 
